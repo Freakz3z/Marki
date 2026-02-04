@@ -72,12 +72,9 @@ export const MainLayout = () => {
 
         {/* Main Content Area */}
         <main 
-          ref={mainRef}
-          className="flex-1 min-w-0 overflow-y-auto h-full scroll-smooth custom-scrollbar"
+          className="flex-1 min-w-0 overflow-hidden flex flex-col h-full bg-background"
         >
-          <div className="py-6 px-4 md:px-8 max-w-7xl mx-auto">
              <Outlet />
-          </div>
         </main>
       </div>
     </div>

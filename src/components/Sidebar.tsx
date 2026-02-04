@@ -6,7 +6,7 @@ import { useAppStore } from '../store';
 import clsx from 'clsx';
 
 const SidebarItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => {
-  const [isOpen, setIsOpen] = useState(true); // Default open for better overview
+  const [isOpen, setIsOpen] = useState(false); // Default closed
   const location = useLocation();
   const closeSidebar = useAppStore(state => state.closeSidebar);
   

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import clsx from 'clsx';
 import { useLocation } from 'react-router-dom';
 import GithubSlugger from 'github-slugger';
@@ -7,6 +7,7 @@ interface TocItem {
   id: string;
   text: string;
   level: number;
+  parentId?: string;
 }
 
 const stripMarkdown = (text: string) => {
@@ -21,32 +22,88 @@ const stripMarkdown = (text: string) => {
 export const TableOfContents = ({ content }: { content: string }) => {
   const [headings, setHeadings] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string>('');
+  const [scrollState, setScrollState] = useState<'top' | 'middle' | 'bottom' | 'none'>('top');
+  const tocRef = useRef<HTMLUListElement>(null);
   const location = useLocation();
+
+  // Scroll detection logic for TOC container
+  const checkScroll = () => {
+    const el = tocRef.current;
+    if (!el) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    
+    if (scrollHeight <= clientHeight) {
+      setScrollState('none');
+      return;
+    }
+
+    const isTop = scrollTop <= 0;
+    const isBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 2;
+
+    if (isTop) setScrollState('top');
+    else if (isBottom) setScrollState('bottom');
+    else setScrollState('middle');
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = tocRef.current;
+    if (el) {
+      el.addEventListener('scroll', checkScroll);
+      // Resize observer to handle window resize or content changes
+      const resizeObserver = new ResizeObserver(checkScroll);
+      resizeObserver.observe(el);
+      return () => {
+        el.removeEventListener('scroll', checkScroll);
+        resizeObserver.disconnect();
+      };
+    }
+  }, [headings]);
+
+  // Auto-scroll TOC to active item
+  useEffect(() => {
+    if (activeId && tocRef.current) {
+      const activeLink = tocRef.current.querySelector(`a[href="#${activeId}"]`);
+      if (activeLink) {
+         // Use scrollIntoView with block: 'nearest' to minimize jumping
+         activeLink.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [activeId]);
 
   useEffect(() => {
     const slugger = new GithubSlugger();
-    // Match all headers # to ###### (but usually we only care about 1-4 for TOC)
-    // Also ignore headers inside code blocks (handled simply by checking start of line)
     const regex = /^(#{1,6})\s+(.+)$/gm;
+    // Remove code blocks before parsing headers to avoid false positives inside code examples
+    const cleanContent = content
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/~~~[\s\S]*?~~~/g, '');
+
     const items: TocItem[] = [];
-    let match;
+    const parentStack: TocItem[] = [];
     
-    while ((match = regex.exec(content)) !== null) {
+    let match;
+    while ((match = regex.exec(cleanContent)) !== null) {
       const level = match[1].length;
       const rawText = match[2].trim();
       const cleanText = stripMarkdown(rawText);
       const id = slugger.slug(cleanText);
 
-      items.push({
-        id,
-        text: cleanText,
-        level: level
-      });
+      const item: TocItem = { id, text: cleanText, level };
+
+      // Determine parent
+      while (parentStack.length > 0 && parentStack[parentStack.length - 1].level >= level) {
+         parentStack.pop();
+      }
+      if (parentStack.length > 0) {
+         item.parentId = parentStack[parentStack.length - 1].id;
+      }
+      
+      parentStack.push(item);
+      items.push(item);
     }
     setHeadings(items);
-    
-    // Scroll to top on route change (handled by layout usually, but ensures sync)
-    // window.scrollTo(0, 0); 
   }, [content, location.pathname]);
 
   useEffect(() => {
@@ -70,39 +127,64 @@ export const TableOfContents = ({ content }: { content: string }) => {
   }, [headings]);
 
   if (headings.length === 0) {
-    // Preserve space even if empty
     return <div className="hidden xl:block w-64 shrink-0 pl-8 order-2"></div>;
   }
 
   return (
     <div className="hidden xl:block w-64 min-w-[16rem] shrink-0 pl-8 order-2">
-       <div className="sticky top-6">
-         <h4 className="mb-4 text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+       <div className="sticky top-6 relative">
+         <h4 className="flex items-center justify-center w-full mb-4 text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
            On This Page
          </h4>
-         <ul className="space-y-1 text-sm">
-           {headings.map((heading, idx) => (
-             <li key={idx}>
-               <a
-                 href={`#${heading.id}`}
-                 className={clsx(
-                   "block py-1.5 px-3 rounded-md transition-all duration-200 truncate",
-                   activeId === heading.id
-                     ? "bg-primary/10 text-primary font-medium"
-                     : "text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                 )}
-                 style={{ marginLeft: `${Math.max(0, heading.level - 2) * 12}px` }}
-                 onClick={(e) => {
-                   e.preventDefault();
-                   document.getElementById(heading.id)?.scrollIntoView({ behavior: 'smooth' });
-                   setActiveId(heading.id);
-                 }}
-               >
-                 {heading.text}
-               </a>
-             </li>
-           ))}
-         </ul>
+         
+         <div className="relative">
+           {/* Scroll Hints - Top */}
+           <div 
+             className={clsx(
+               "absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white dark:from-[#111] to-transparent z-10 pointer-events-none transition-opacity duration-300",
+               (scrollState === 'middle' || scrollState === 'bottom') ? "opacity-100" : "opacity-0"
+             )} 
+           />
+
+           <ul 
+             ref={tocRef}
+             className="space-y-1 text-sm max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar pr-2 pb-2"
+           >
+             {headings.map((heading) => (
+               <li key={heading.id}>
+                 <a
+                   href={`#${heading.id}`}
+                   className={clsx(
+                     "block py-1.5 px-3 rounded-md transition-all duration-200 truncate",
+                     activeId === heading.id
+                       ? "bg-primary/10 text-primary font-medium"
+                       : "text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                   )}
+                   style={{ marginLeft: `${Math.max(0, heading.level - 2) * 12}px` }}
+                   onClick={(e) => {
+                     e.preventDefault();
+                     setActiveId(heading.id); // Set immediate feedback
+                     const el = document.getElementById(heading.id);
+                     if (el) {
+                        // scrollIntoView with block: 'start' aligns it to top (respecting scroll-margin)
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }
+                   }}
+                 >
+                   {heading.text}
+                 </a>
+               </li>
+             ))}
+           </ul>
+
+           {/* Scroll Hints - Bottom */}
+           <div 
+             className={clsx(
+               "absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white dark:from-[#111] to-transparent z-10 pointer-events-none transition-opacity duration-300",
+               (scrollState === 'middle' || scrollState === 'top') ? "opacity-100" : "opacity-0"
+             )} 
+           />
+         </div>
        </div>
     </div>
   );
