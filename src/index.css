@@ -115,5 +115,18 @@ body:hover::-webkit-scrollbar-thumb {
 .markdown-body a { @apply text-primary hover:underline; }
 .markdown-body hr { @apply my-8 border-t border-border; }
 
+/* Badges/Shields styling - keep badges inline */
+.markdown-body a:has(> img[src*="shields"]) {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.markdown-body a:has(> img[src*="shields"]) img {
+  margin: 0 !important;
+  box-shadow: none !important;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 /* Custom scrollbar for sidebar - autohide behavior */
 /* Old sidebar styles removed */
