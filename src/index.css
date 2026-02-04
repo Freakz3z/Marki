@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #3b82f6;
+    --background: #ffffff;
+    --surface: #f3f4f6;
+    --text: #1f2937;
+    --border: #e5e7eb;
+  }
+
+  .dark {
+    --primary: #60a5fa;
+    --background: #18181b;
+    --surface: #27272a;
+    --text: #e4e4e7;
+    --border: #3f3f46;
+  }
+
+  body {
+    @apply bg-background text-text transition-colors duration-200;
+    overflow-x: hidden;
+  }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
+}
+
+/* Markdown Content Styles - simplified version of @tailwindcss/typography */
+.markdown-body h1 { @apply text-3xl font-bold mt-8 mb-4; }
+.markdown-body h2 { @apply text-2xl font-bold mt-6 mb-3 border-b pb-2 border-border; }
+.markdown-body h3 { @apply text-xl font-bold mt-5 mb-2; }
+.markdown-body h4 { @apply text-lg font-bold mt-4 mb-2; }
+.markdown-body p { @apply mb-4 leading-relaxed; }
+.markdown-body ul { @apply list-disc list-outside ml-6 mb-4; }
+.markdown-body ol { @apply list-decimal list-outside ml-6 mb-4; }
+.markdown-body blockquote { @apply border-l-4 border-primary pl-4 py-3 my-6 bg-gray-50 dark:bg-gray-800/50 rounded-r-lg text-gray-700 dark:text-gray-300 not-italic shadow-sm; }
+.markdown-body blockquote p { @apply my-0; }
+.markdown-body pre { @apply bg-gray-900 rounded-lg p-4 mb-4 overflow-x-auto text-white dark:bg-[#1e1e1e]; }
+.markdown-body code { @apply bg-surface px-1.5 py-0.5 rounded text-sm font-mono text-pink-500 dark:text-gray-300; }
+.markdown-body pre code { @apply bg-transparent p-0 text-inherit text-sm; }
+.markdown-body img { @apply max-w-full h-auto rounded-lg my-4 shadow-md; }
+.markdown-body table { @apply w-full border-collapse mb-4; }
+.markdown-body th, .markdown-body td { @apply border border-border p-2; }
+.markdown-body th { @apply bg-surface font-semibold; }
+.markdown-body a { @apply text-primary hover:underline; }
+.markdown-body hr { @apply my-8 border-t border-border; }
+
+/* Custom scrollbar for sidebar - autohide behavior simulation */
+/* We make the thumb transparent by default, and visible on hover of the scroll container */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+  background-color: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  transition: background-color 0.3s;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700;
+}
