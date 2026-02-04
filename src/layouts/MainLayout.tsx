@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Sidebar } from '@/components/Sidebar';
 import { useAppStore } from '@/store';
 import { getNavigation } from '@/services/docs';
+import { useScrollClass } from '@/hooks/useScrollClass';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import type { NavItem } from '@/types';
@@ -12,6 +13,13 @@ export const MainLayout = () => {
   const { isSidebarOpen, closeSidebar, theme } = useAppStore();
   const location = useLocation();
   const [navItems, setNavItems] = useState<NavItem[]>([]);
+  
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Apply scroll detection
+  useScrollClass(sidebarRef);
+  useScrollClass(mainRef);
 
   useEffect(() => {
     const init = async () => {
@@ -32,11 +40,14 @@ export const MainLayout = () => {
       <div className="flex flex-1 w-full md:px-4 overflow-hidden">
         {/* Sidebar for Desktop */}
          <aside className="hidden md:flex flex-col w-72 shrink-0 border-r border-border h-full bg-background z-30">
-           <div className="flex-1 overflow-y-auto py-6 pr-4 pl-2 sidebar-scroll">
+           <div 
+             ref={sidebarRef}
+             className="flex-1 overflow-y-auto py-6 pr-4 pl-2 custom-scrollbar"
+            >
              <Sidebar items={navItems} />
            </div>
            <div className="p-4 border-t border-border mt-auto">
-              <a href="javascript:void(0)" className="flex items-center justify-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-border">
+              <a href="https://github.com/Freakz3z/Marki" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-border">
                   <span className="whitespace-nowrap">由 阈启科技(Limnov) 提供支持</span>
                   <img src="/Limnov.jpg" alt="Limnov" className="h-6 w-6 rounded-full object-cover" />
               </a>
@@ -52,7 +63,7 @@ export const MainLayout = () => {
                 <span className="font-bold text-lg">Menu</span>
                 <button onClick={closeSidebar}><X /></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                  <Sidebar items={navItems} />
               </div>
             </div>
@@ -60,7 +71,10 @@ export const MainLayout = () => {
         )}
 
         {/* Main Content Area */}
-        <main className="flex-1 min-w-0 overflow-y-auto h-full scroll-smooth">
+        <main 
+          ref={mainRef}
+          className="flex-1 min-w-0 overflow-y-auto h-full scroll-smooth custom-scrollbar"
+        >
           <div className="py-6 px-4 md:px-8 max-w-7xl mx-auto">
              <Outlet />
           </div>
