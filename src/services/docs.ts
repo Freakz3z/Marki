@@ -8,17 +8,24 @@ const docModules = import.meta.glob('/docs/**/*.md', { query: '?raw', import: 'd
 
 // --- Helpers ---
 
-// Normalize path to match internal routing schema (/docs/...)
-const normalizePath = (p: string): string => {
+// Normalize path to internal routing format
+// For local mode: /docs/...
+// For remote mode: /... (no prefix)
+const normalizePath = (p: string, localMode: boolean = true): string => {
   let cleanPath = p.trim();
   if (cleanPath.startsWith('./')) cleanPath = cleanPath.slice(2);
   if (cleanPath.startsWith('/')) cleanPath = cleanPath.slice(1);
-  
-  // If it already starts with docs/, keep it, else add it.
-  if (cleanPath.startsWith('docs/')) {
-    return `/${cleanPath}`;
+
+  // For local mode, add /docs/ prefix if not already present
+  if (localMode) {
+    if (cleanPath.startsWith('docs/')) {
+      return `/${cleanPath}`;
+    }
+    return `/docs/${cleanPath}`;
   }
-  return `/docs/${cleanPath}`;
+
+  // For remote mode, don't add /docs/ prefix
+  return `/${cleanPath}`;
 };
 
 const getRelativePath = (internalPath: string): string => {
@@ -30,7 +37,7 @@ const getRelativePath = (internalPath: string): string => {
 
 // --- Parse Logic (Shared) ---
 
-export const parseSummary = (content: string): NavItem[] => {
+export const parseSummary = (content: string, localMode: boolean = true): NavItem[] => {
   const lines = content.split('\n');
   const root: NavItem[] = [];
   let currentSection: NavItem | null = null;
@@ -62,12 +69,13 @@ export const parseSummary = (content: string): NavItem[] => {
       const indent = linkMatch[1].length;
       const title = linkMatch[2];
       const linkPath = linkMatch[3];
-      
+
       const isExternal = linkPath.startsWith('http://') || linkPath.startsWith('https://');
+      const normalizedPath = normalizePath(linkPath, localMode);
 
       const item: NavItem = {
         title,
-        path: isExternal ? linkPath : normalizePath(linkPath),
+        path: isExternal ? linkPath : normalizedPath,
         children: []
       };
       addToStack(item, indent);
@@ -116,10 +124,11 @@ export const getNavigation = async (): Promise<NavItem[]> => {
     try {
       const branch = config.branch || 'main';
       const url = `https://raw.githubusercontent.com/${config.githubRepo}/${branch}/SUMMARY.md`;
+
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Failed to fetch SUMMARY.md: ${res.statusText}`);
       const text = await res.text();
-      return parseSummary(text);
+      return parseSummary(text, false); // remote mode: don't add /docs/ prefix
     } catch (e) {
       console.error("Remote navigation load failed", e);
       return [];
@@ -128,7 +137,7 @@ export const getNavigation = async (): Promise<NavItem[]> => {
     // Local Mode
     const key = '/docs/SUMMARY.md';
     const raw = (summaryModules[key] as string) || '';
-    return parseSummary(raw);
+    return parseSummary(raw, true); // local mode: add /docs/ prefix
   }
 };
 
@@ -165,16 +174,16 @@ export const loadDocument = async (path: string): Promise<DocContent | null> => 
     // Remote Mode
     try {
       const branch = config.branch || 'main';
-      const relPath = getRelativePath(path);
+      // In remote mode, path doesn't have /docs/ prefix, just remove leading /
+      const relPath = path.startsWith('/') ? path.slice(1) : path;
       const url = `https://raw.githubusercontent.com/${config.githubRepo}/${branch}/${relPath}`;
-      
+
       let res = await fetch(url);
       if (!res.ok) {
           if (!url.endsWith('.md')) {
              const urlMd = url + '.md';
              res = await fetch(urlMd);
              if (!res.ok) {
-                 console.error(`Remote doc not found: ${url} or ${urlMd}`);
                  return null;
              }
           } else {
@@ -185,12 +194,11 @@ export const loadDocument = async (path: string): Promise<DocContent | null> => 
       // Base URL for assets
       const currentDir = relPath.substring(0, relPath.lastIndexOf('/'));
       const baseUrl = `https://raw.githubusercontent.com/${config.githubRepo}/${branch}/${currentDir ? currentDir + '/' : ''}`;
-      
+
       const doc = parseRemoteContent(text, path, baseUrl);
 
       // Attempt to fetch metadata (non-blocking if possible, but we need it for render)
       // Usually we await, or we could load it later. For now, await basic info.
-      // Use relPath which is "foo/bar.md"
       const history = await fetchHistory(config.githubRepo, branch, relPath);
       if (history) {
           doc.metadata.lastModified = history.lastModified;
@@ -330,17 +338,17 @@ export const searchDocs = async (query: string): Promise<any[]> => {
       // To avoid killing the rate limit, we might only search titles or key pages?
       // Or we accept it's slow.
       // Better strategy: We can't easily grep raw github content without fetching.
-      // Let's implement a 'Title only' search for remote to be fast, 
+      // Let's implement a 'Title only' search for remote to be fast,
       // OR a slow full text search. Let's start with Title Search + Fetching ~5-10 pages matches?
       // Actually, best user experience for client-side remote search:
       // 1. Search Titles first (instant)
       // 2. Return results.
-      
+
       // Let's robustly get navigation
       let nav: NavItem[] = [];
       try {
         const text = await (await fetch(`https://raw.githubusercontent.com/${config.githubRepo}/${config.branch || 'main'}/SUMMARY.md`)).text();
-        nav = parseSummary(text);
+        nav = parseSummary(text, false); // remote mode: don't add /docs/ prefix
       } catch { return []; }
 
       const flat = flattenNav(nav);

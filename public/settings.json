@@ -2,6 +2,7 @@
   "mode": "remote",
   "githubRepo": "Freakz3z/HNNU-Wiki",
   "branch": "main",
+  "localDocsFolder": "docs",
   "siteTitle": "HNNU-Wiki",
   "navbarTitle": "HNNU-Wiki",
   "logoPath": "/logo.jpg",

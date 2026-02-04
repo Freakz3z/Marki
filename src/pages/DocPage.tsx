@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { loadDocument, getNavigation } from '@/services/docs';
 import type { DocContent, NavItem } from '@/types';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -23,15 +23,26 @@ const flattenNav = (items: NavItem[]): NavItem[] => {
 
 export const DocPage = () => {
   const params = useParams(); // returns "*"
+  const location = useLocation();
   const [doc, setDoc] = useState<DocContent | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Construct path from params
-  // The route will be /view/*
-  // so params["*"] is the path
-  let path = params["*"] || '';
+
+  // Construct path from location.pathname instead of params
+  // This avoids React Router wildcard issues with Chinese characters
+  let path = location.pathname.replace(/^\/view/, '') || '';
+
+  // Decode URL-encoded Chinese characters
+  try {
+    path = decodeURIComponent(path);
+  } catch (e) {
+    console.warn('[DocPage] Failed to decode path:', path, e);
+  }
+
   if (!path.startsWith('/')) path = '/' + path;
-  if (!path.startsWith('/docs/')) path = '/docs' + path;
+
+  // Note: Don't force add /docs/ prefix here
+  // - In local mode, navigation paths already have /docs/ prefix (added by parseSummary)
+  // - In remote mode, paths don't have /docs/ prefix
   
   const [prevDoc, setPrevDoc] = useState<NavItem | null>(null);
   const [nextDoc, setNextDoc] = useState<NavItem | null>(null);

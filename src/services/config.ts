@@ -2,6 +2,7 @@ export interface AppConfig {
   mode?: 'local' | 'remote';
   githubRepo?: string;
   branch?: string;
+  localDocsFolder?: string; // 本地模式中文档所在的文件夹名称（仅用于本地模式）
   siteTitle?: string;
   navbarTitle?: string;
   logoPath?: string;
