@@ -25,10 +25,10 @@ const SidebarItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => 
             "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300",
             level > 0 && "ml-3"
           )}
-          style={{ paddingLeft: `${level * 12 + 8}px` }}
+          style={{ paddingLeft: `${level * 12 + 12}px` }}
         >
-          {isOpen ? <ChevronDown size={16} className="mr-1" /> : <ChevronRight size={16} className="mr-1" />}
-          <span className="truncate">{item.title}</span>
+          <span className="truncate flex-1 text-left">{item.title}</span>
+          {isOpen ? <ChevronDown size={16} className="ml-1 text-gray-400" /> : <ChevronRight size={16} className="ml-1 text-gray-400" />}
         </button>
         {isOpen && (
           <div className="mt-1">
@@ -54,13 +54,13 @@ const SidebarItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => 
             "flex items-center w-full px-2 py-1.5 text-sm font-medium rounded-md transition-colors mb-1",
             "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 group"
           )}
-          style={{ paddingLeft: `${level * 12 + 24}px` }}
+          style={{ paddingLeft: `${level * 12 + 12}px` }}
           onClick={() => {
              if (window.innerWidth < 768) closeSidebar();
           }}
         >
           <span className="truncate flex-1">{item.title}</span>
-          <ExternalLink size={14} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400" />
+          <ExternalLink size={14} className="ml-2 text-gray-400" />
         </a>
       );
   }
@@ -75,10 +75,10 @@ const SidebarItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => 
       className={({ isActive: isLinkActive }) => clsx(
         "flex items-center w-full px-2 py-1.5 text-sm font-medium rounded-md transition-colors mb-1",
         (isActive || isLinkActive) 
-          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" 
+          ? "text-blue-700 dark:text-blue-300 font-bold" 
           : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800",
       )}
-      style={{ paddingLeft: `${level * 12 + 24}px` }}
+      style={{ paddingLeft: `${level * 12 + 12}px` }}
       onClick={() => {
         if (window.innerWidth < 768) closeSidebar();
       }}
@@ -95,8 +95,8 @@ export const Sidebar = ({ items }: { items: NavItem[] }) => {
         // Treat top-level items with children and no path as Section Headers (non-collapsible)
         if (item.children && item.children.length > 0 && !item.path) {
           return (
-            <div key={idx} className={clsx("mb-2", idx !== 0 && "mt-10")}>
-               <h3 className="px-4 mb-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <div key={idx} className={clsx("mb-2", idx !== 0 && "mt-8")}>
+               <h3 className="mx-2 px-3 py-1.5 mb-2 rounded-md text-sm font-bold text-center text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20">
                  {item.title}
                </h3>
                <div className="space-y-0.5">

@@ -4,9 +4,10 @@ import { loadDocument, getNavigation } from '@/services/docs';
 import type { DocContent, NavItem } from '@/types';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { TableOfContents } from '../components/TableOfContents';
-import { ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp, Loader2 } from 'lucide-react';
 import { useScrollClass } from '@/hooks/useScrollClass';
 import clsx from 'clsx';
+import { useAppStore } from '@/store'; // Import store
 
 // Flatten nav items to find prev/next
 const flattenNav = (items: NavItem[]): NavItem[] => {
@@ -37,6 +38,8 @@ export const DocPage = () => {
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const { isTocCollapsed } = useAppStore();
   
   // Apply scroll detection
   useScrollClass(scrollContainerRef);
@@ -44,13 +47,26 @@ export const DocPage = () => {
   useEffect(() => {
     const handleScroll = () => {
        if (scrollContainerRef.current) {
-          setShowBackToTop(scrollContainerRef.current.scrollTop > 300);
+          const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+          const maxScroll = scrollHeight - clientHeight;
+          
+          if (maxScroll > 0) {
+            // Calculate progress 0..1
+            const progress = Math.max(0, Math.min(1, scrollTop / maxScroll));
+            setScrollProgress(progress);
+            // Hide button when at the very top
+            setShowBackToTop(scrollTop > 50);
+          } else {
+            setShowBackToTop(false);
+          }
        }
     };
     
     const el = scrollContainerRef.current;
     if (el) {
        el.addEventListener('scroll', handleScroll);
+       // Initial check
+       handleScroll();
        return () => el.removeEventListener('scroll', handleScroll);
     }
   }, [loading, doc]);
@@ -89,7 +105,12 @@ export const DocPage = () => {
   }, [path]);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
+    return (
+      <div className="flex flex-col justify-center items-center h-full w-full text-gray-500 animate-in fade-in duration-300">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+        <span className="text-sm font-medium">Loading...</span>
+      </div>
+    );
   }
 
   if (!doc) {
@@ -109,7 +130,7 @@ export const DocPage = () => {
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto h-full scroll-smooth custom-scrollbar relative px-4 md:px-8 py-6"
         >
-          <div className="max-w-4xl mx-auto xl:mx-0 w-full">
+          <div className={clsx("mx-auto w-full transition-all duration-300", isTocCollapsed ? "max-w-6xl" : "max-w-4xl")}>
             <div className="mb-6">
               <div className="text-sm text-gray-400 mb-2 font-mono">{doc.path.replace(/^\/docs\//, '')}</div>
               <h1 className="text-4xl font-bold mb-2 break-words">{doc.metadata.title || 'Untitled'}</h1>
@@ -181,17 +202,35 @@ export const DocPage = () => {
           We need to verify if TableOfContents works when headers are in a scrolling div, not document.body.
           (Update: IntersectionObserver works with any ancestor if root is null (viewport) or specified).
         */}
-      <div className="h-full pt-6 relative border-l border-border/50">
+      <div className="hidden md:block h-full pt-6 relative border-l border-border/50 min-w-[32px] xl:min-w-0">
            <TableOfContents content={doc.content} />
            
-           {/* Back To Top Button - positioned at bottom right of scrollbar line */}
+           {/* Custom Scrollbar Logic / Back To Top Button 
+               Update: User requested to use the Back To Top button AS the scrollbar thumb.
+               We can render a custom indicator or keep the Back To Top simple button.
+               The button moves along the border based on scroll progress.
+            */}
+           {/* The connecting line "string" - visible only on desktop/tablet */}
+           <div 
+             className={clsx(
+                "absolute top-0 -left-[1px] w-[2px] bg-blue-500 dark:bg-blue-400 z-40 hidden md:block transition-all duration-75 ease-out",
+                showBackToTop ? "opacity-100" : "opacity-0"
+             )}
+             style={{
+                height: `calc(${scrollProgress} * (100% - 80px))`
+             }}
+           />
+           
            <button
-            onClick={scrollToTop}
+            onClick={scrollToTop} 
+            style={{ 
+              top: `calc(${scrollProgress} * (100% - 80px))` // Moves from 0 to 100% - 80px (32px height + 48px bottom buffer)
+            }}
             className={clsx(
-              "absolute bottom-8 -left-4 flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-lg text-gray-500 hover:text-primary hover:border-primary transition-all duration-300 z-50",
-              showBackToTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+              "absolute -left-4 flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-lg text-gray-500 hover:text-primary hover:border-primary transition-all duration-75 ease-out z-50 hidden md:flex",
+              showBackToTop ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
-            title="Back to Top"
+            title="Back to Top / Scroll Indicator"
            >
              <ArrowUp size={16} />
            </button>

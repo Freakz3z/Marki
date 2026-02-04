@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import clsx from 'clsx';
 import { useLocation } from 'react-router-dom';
 import GithubSlugger from 'github-slugger';
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { useAppStore } from '@/store';
 
 interface TocItem {
   id: string;
@@ -23,6 +25,9 @@ export const TableOfContents = ({ content }: { content: string }) => {
   const [headings, setHeadings] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string>('');
   const [scrollState, setScrollState] = useState<'top' | 'middle' | 'bottom' | 'none'>('top');
+  
+  const { isTocCollapsed, toggleToc } = useAppStore();
+  
   const tocRef = useRef<HTMLUListElement>(null);
   const location = useLocation();
 
@@ -127,17 +132,39 @@ export const TableOfContents = ({ content }: { content: string }) => {
   }, [headings]);
 
   if (headings.length === 0) {
-    return <div className="hidden xl:block w-64 shrink-0 pl-8 order-2"></div>;
+    return <div className="hidden xl:block w-64 shrink-0 pl-4 order-2"></div>;
   }
 
   return (
-    <div className="hidden xl:block w-64 min-w-[16rem] shrink-0 pl-8 order-2">
-       <div className="sticky top-6 relative">
-         <h4 className="flex items-center justify-center w-full mb-4 text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
-           On This Page
-         </h4>
+    <div 
+      className={clsx(
+        "hidden xl:block shrink-0 order-2 transition-all duration-300 ease-in-out h-full pl-4",
+        isTocCollapsed ? "w-12" : "w-64 min-w-[16rem]"
+      )}
+    >
+       <div className="sticky top-6 relative flex flex-col h-full">
+         <div className="flex items-center justify-between mb-4 w-full">
+            {!isTocCollapsed && (
+              <h4 className="flex-1 text-center text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider whitespace-nowrap overflow-hidden">
+                On This Page
+              </h4>
+            )}
+            <button
+              onClick={toggleToc}
+              className={clsx(
+                "p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors",
+                isTocCollapsed ? "mx-auto" : ""
+              )}
+              title={isTocCollapsed ? "Expand TOC" : "Collapse TOC"}
+            >
+               {isTocCollapsed ? <PanelRightOpen size={18} /> : <PanelRightClose size={18} />}
+            </button>
+         </div>
          
-         <div className="relative">
+         <div className={clsx(
+            "relative flex-1 overflow-hidden transition-opacity duration-300",
+            isTocCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+         )}>
            {/* Scroll Hints - Top */}
            <div 
              className={clsx(

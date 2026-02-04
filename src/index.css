@@ -33,35 +33,44 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.03);
   border-left: 1px solid transparent; 
 }
+.dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
 
-/* 
- * The trick for "fade on scroll/hover" requires:
- * 1. Default thumb state: transparent
- * 2. Active states (.is-scrolling, :hover): visible color
- * 3. Transition: on background-color
- */
-
-/* Target elements using our custom class or global scrollbars */
+/* Hide native scrollbar for content area as we use the custom indicator */
+.custom-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 .custom-scrollbar::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
-  background-color: transparent; /* Initially hidden */
+  background-color: rgba(156, 163, 175, 0.3); /* Always visible as faint line */
   border-radius: 0;
   
   /* Smooth transition for fade in/out */
   transition: background-color 0.3s ease-in-out;
 }
 
+/* State: Hovering the container (mouse over scroll area) - Make it slightly more visible */
+.custom-scrollbar:hover::-webkit-scrollbar-thumb,
+body:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5); 
+}
+
 /* State: Programmatic scrolling (via JS hook) */
 .custom-scrollbar.is-scrolling::-webkit-scrollbar-thumb {
-  background-color: rgba(59, 130, 246, 0.6); /* blue-500 for line visibility */
+  background-color: #3b82f6; /* Solid Blue-500 */
 }
 
 /* Dark mode overrides */
 .dark .custom-scrollbar.is-scrolling::-webkit-scrollbar-thumb {
-  background-color: rgba(96, 165, 250, 0.6); /* blue-400 */
+  background-color: #60a5fa; /* Solid Blue-400 */
 }
 
 /* Hover on the thumb itself - make it darker */
