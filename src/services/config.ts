@@ -1,4 +1,5 @@
 export interface AppConfig {
+  mode?: 'local' | 'remote';
   githubRepo?: string;
   branch?: string;
   siteTitle?: string;

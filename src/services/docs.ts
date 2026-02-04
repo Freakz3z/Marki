@@ -108,7 +108,10 @@ export const parseSummary = (content: string): NavItem[] => {
 export const getNavigation = async (): Promise<NavItem[]> => {
   const config = await loadConfig();
 
-  if (config.githubRepo) {
+  // Check mode: default to 'local' if not specified, but use 'remote' if githubRepo is set and mode is not explicitly 'local'
+  const useRemote = config.mode === 'remote' || (!config.mode && config.githubRepo);
+
+  if (useRemote) {
     // Remote Mode
     try {
       const branch = config.branch || 'main';
@@ -155,7 +158,10 @@ async function fetchHistory(repo: string, branch: string, path: string) {
 export const loadDocument = async (path: string): Promise<DocContent | null> => {
   const config = await loadConfig(); // Ensure config is loaded
 
-  if (config.githubRepo) {
+  // Check mode: default to 'local' if not specified, but use 'remote' if githubRepo is set and mode is not explicitly 'local'
+  const useRemote = config.mode === 'remote' || (!config.mode && config.githubRepo);
+
+  if (useRemote) {
     // Remote Mode
     try {
       const branch = config.branch || 'main';
@@ -314,7 +320,10 @@ export const searchDocs = async (query: string): Promise<any[]> => {
   const config = await loadConfig();
   const q = query.toLowerCase();
 
-  if (config.githubRepo) {
+  // Check mode: default to 'local' if not specified, but use 'remote' if githubRepo is set and mode is not explicitly 'local'
+  const useRemote = config.mode === 'remote' || (!config.mode && config.githubRepo);
+
+  if (useRemote) {
       // Remote search: Fetch navigation, then fetch content of pages lazily or simply?
       // Since we can't search server-side, we must fetch pages.
       // Optimization: Fetch only when query > 2 chars.
