@@ -115,7 +115,6 @@ export const MarkdownRenderer = ({ content, filePath }: MarkdownRendererProps) =
                 {...props}
               >
                 {children}
-                {isExternal && <ExternalLink size={12} className="inline-block ml-0.5 opacity-60" />}
               </a>
             );
           }
