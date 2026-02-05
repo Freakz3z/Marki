@@ -28,13 +28,6 @@ const normalizePath = (p: string, localMode: boolean = true): string => {
   return `/${cleanPath}`;
 };
 
-const getRelativePath = (internalPath: string): string => {
-  if (internalPath.startsWith('/docs/')) {
-    return internalPath.slice(6); // remove '/docs/'
-  }
-  return internalPath.startsWith('/') ? internalPath.slice(1) : internalPath;
-};
-
 // --- Parse Logic (Shared) ---
 
 export const parseSummary = (content: string, localMode: boolean = true): NavItem[] => {
@@ -199,6 +192,9 @@ export const loadDocument = async (path: string): Promise<DocContent | null> => 
 
       // Attempt to fetch metadata (non-blocking if possible, but we need it for render)
       // Usually we await, or we could load it later. For now, await basic info.
+      if (!config.githubRepo) {
+        return doc;
+      }
       const history = await fetchHistory(config.githubRepo, branch, relPath);
       if (history) {
           doc.metadata.lastModified = history.lastModified;

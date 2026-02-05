@@ -5,7 +5,7 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
 import 'highlight.js/styles/github-dark.css'; // Or another style
-import { Check, Copy, ExternalLink } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import clsx from 'clsx';
 
 interface MarkdownRendererProps {

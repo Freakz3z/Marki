@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { loadDocument, getNavigation } from '@/services/docs';
 import type { DocContent, NavItem } from '@/types';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -22,7 +22,6 @@ const flattenNav = (items: NavItem[]): NavItem[] => {
 };
 
 export const DocPage = () => {
-  const params = useParams(); // returns "*"
   const location = useLocation();
   const [doc, setDoc] = useState<DocContent | null>(null);
   const [loading, setLoading] = useState(true);
