@@ -46,15 +46,28 @@ const CustomPre = ({ children, ...props }: React.DetailedHTMLProps<React.HTMLAtt
       if (React.isValidElement(child)) {
          const props = child.props as { children?: React.ReactNode | React.ReactNode[] };
          if (props.children) {
-            if (Array.isArray(props.children)) {
-                text += props.children.join('');
-            } else {
-                text += String(props.children);
-            }
+            text += extractTextFromNode(props.children);
          }
       }
     });
     return text;
+  };
+
+  // Recursively extract text content from React nodes
+  const extractTextFromNode = (node: React.ReactNode | React.ReactNode[]): string => {
+    if (typeof node === 'string' || typeof node === 'number') {
+      return String(node);
+    }
+    if (Array.isArray(node)) {
+      return node.map(extractTextFromNode).join('');
+    }
+    if (React.isValidElement(node)) {
+      const props = node.props as { children?: React.ReactNode | React.ReactNode[] };
+      if (props?.children) {
+        return extractTextFromNode(props.children);
+      }
+    }
+    return '';
   };
 
   const handleCopy = () => {
