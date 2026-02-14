@@ -47,7 +47,7 @@ export const MainLayout = () => {
              <Sidebar items={navItems} />
            </div>
            <div className="p-4 border-t border-border mt-auto">
-              <a href="https://limnovwebsite.89b52195.er.aliyun-esa.net/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-border">
+              <a href="https://limnov.com" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-border">
                   <span className="whitespace-nowrap">由 Limnov 提供支持</span>
                   <img src="/Limnov.jpg" alt="Limnov" className="h-6 w-6 rounded-full object-cover" />
               </a>
