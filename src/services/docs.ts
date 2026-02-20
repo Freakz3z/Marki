@@ -3,8 +3,8 @@ import matter from 'gray-matter';
 import { loadConfig } from './config';
 
 // --- Local Files (Build-time) ---
-const summaryModules = import.meta.glob('/docs/SUMMARY.md', { query: '?raw', import: 'default', eager: true });
-const docModules = import.meta.glob('/docs/**/*.md', { query: '?raw', import: 'default' });
+const summaryModules = import.meta.glob('/docs/SUMMARY.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const docModules = import.meta.glob('/docs/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
 
 // --- Helpers ---
 
@@ -211,8 +211,8 @@ export const loadDocument = async (path: string): Promise<DocContent | null> => 
   }
 
   // Local Mode
-  let loader = docModules[path];
-  
+  let loader: (() => Promise<string>) | undefined = docModules[path];
+
   if (!loader) {
     // Robust lookup
     const matchedKey = Object.keys(docModules).find(key => key.endsWith(path));
@@ -360,10 +360,10 @@ export const searchDocs = async (query: string): Promise<any[]> => {
 
   // Local search
   const results: any[] = [];
-  for (const [path, loader] of Object.entries(docModules)) {
+  for (const [path, loader] of Object.entries(docModules) as [string, () => Promise<string>][]) {
       if (path === '/docs/SUMMARY.md') continue;
       try {
-        const raw = await loader() as string;
+        const raw = await loader();
         const { content, data } = matter(raw);
         const title = data.title || extractTitle(content, path);
         if (title.toLowerCase().includes(query.toLowerCase()) || content.toLowerCase().includes(query.toLowerCase())) {
