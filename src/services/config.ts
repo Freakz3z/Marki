@@ -10,8 +10,8 @@ export interface AppConfig {
 }
 
 let config: AppConfig = {
-    siteTitle: 'HNNU-Wiki',
-    navbarTitle: 'HNNU-Wiki'
+    siteTitle: 'Marki',
+    navbarTitle: 'Marki'
 };
 let configLoaded = false;
 
