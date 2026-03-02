@@ -10,7 +10,7 @@ export const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [title, setTitle] = useState('HNNU-Wiki');
+  const [title, setTitle] = useState('Marki');
   const [logo, setLogo] = useState<string | undefined>(undefined);
   const [repo, setRepo] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
